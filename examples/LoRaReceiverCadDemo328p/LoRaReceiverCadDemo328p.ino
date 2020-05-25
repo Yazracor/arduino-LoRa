@@ -15,6 +15,9 @@ byte dio0_pin = 2;
 byte dio1_pin = 3;
 
 void setup() {
+  // disable ADC
+  ADCSRA = 0;
+
   Serial.begin(9600);
   while (!Serial);
 

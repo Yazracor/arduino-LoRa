@@ -104,6 +104,12 @@ void parse_packet(){
   }  
 }
 
+void send_message(){
+  LoRa.beginPacket();
+  LoRa.print("hello");
+  LoRa.endPacket();
+}
+
 void loop() {
    if (LoRa.cadModeActive && dio0_rise){
       // dio0: CadDone
@@ -120,7 +126,17 @@ void loop() {
          // put both radio and microcontroller to sleep
          LoRa.sleep();
          go_to_sleep();
-         
+
+         /*
+         // send a message periodically
+         static uint16_t send_message_counter{0};
+         send_message_counter++;
+         if (send_message_counter > 250){
+            send_message_counter = 0;
+            send_message();
+         }
+         */
+
          dio0_rise = false;
          dio1_rise = false;
          LoRa.cadMode();

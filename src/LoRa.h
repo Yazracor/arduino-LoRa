@@ -90,6 +90,7 @@ public:
 
   void dumpRegisters(Stream& out);
   void cadMode();
+  bool irqCadDetected();
   void setRxSingle();
   bool cadModeActive = false;
   bool rxSingleMode = false;

@@ -55,6 +55,7 @@
 #define IRQ_TX_DONE_MASK           0x08
 #define IRQ_PAYLOAD_CRC_ERROR_MASK 0x20
 #define IRQ_RX_DONE_MASK           0x40
+#define IRQ_CAD_DETECTED           0x01
 
 #define MAX_PKT_LENGTH           255
 
@@ -726,6 +727,15 @@ void LoRaClass::cadMode(){
   writeRegister(REG_DIO_MAPPING_1, 0b10100000);
 
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_CAD);
+}
+
+bool LoRaClass::irqCadDetected(){
+    if (readRegister(REG_IRQ_FLAGS) & IRQ_CAD_DETECTED){
+       writeRegister(REG_IRQ_FLAGS, IRQ_CAD_DETECTED);
+       return true;
+    }
+
+    return false;
 }
 
 void LoRaClass::setRxSingle(){

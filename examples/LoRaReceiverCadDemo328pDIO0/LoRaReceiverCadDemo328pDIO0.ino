@@ -117,21 +117,28 @@ void loop() {
    if (LoRa.cadModeActive && dio0_rise){
       // dio0: CadDone
       // dio1: CadDetected
+      dio0_rise = false;
+      // dio1 is not used in this sketch: CadDetected is looked up in RegIrqFlags
       
       if (LoRa.irqCadDetected()){
-         dio0_rise = false;
-         //dio1_rise = false;
          // prepare radio to receive a single packet
          // no need to change DIO mapping in this sketch, run parsePacket() instead
-         //LoRa.setRxSingle();
-         LoRa.parsePacket(); // initially sets up radio in RX mode
-         // manually change state:
+         // manually change state (previously it was changed in setRxSingle())
+         // these attributes are not really needed in this sketch anymore
          LoRa.cadModeActive = false;
          LoRa.rxSingleMode = true;
 
-         return;
-      } else {
+         uint32_t read_timeout = millis() + 500;
+         while (millis() < read_timeout){
+            if (parse_packet()){
+               // when not already in RxSingle, LoRa.parsePacket() first sets the radio in RxSingle
+               Serial.flush();
+               break;      
+            }
+         }
 
+         LoRa.cadMode();
+      } else {
          // nothing detected: wait before initiating the next cadMode
          // put both radio and microcontroller to sleep
          LoRa.sleep();
@@ -147,22 +154,8 @@ void loop() {
          }
          */
 
-         dio0_rise = false;
-         //dio1_rise = false;
          LoRa.cadMode();
       }
-   } else if (LoRa.rxSingleMode) {
-      // no interrupts: retry many times
-      for (uint16_t i = 0; i < 1000; i++){
-         if (parse_packet()){
-            Serial.flush();
-            break;
-         }
-      }
- 
-      dio0_rise = false;
-      //dio1_rise = false;
-      LoRa.cadMode();
    }
    
    go_to_sleep();

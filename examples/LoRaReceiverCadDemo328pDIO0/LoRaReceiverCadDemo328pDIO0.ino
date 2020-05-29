@@ -128,13 +128,22 @@ void loop() {
          LoRa.cadModeActive = false;
          LoRa.rxSingleMode = true;
 
-         uint32_t read_timeout = millis() + 500;
+         uint32_t read_timeout = millis() + 200;
+         bool read_ok = false;
          while (millis() < read_timeout){
             if (parse_packet()){
                // when not already in RxSingle, LoRa.parsePacket() first sets the radio in RxSingle
                Serial.flush();
+               read_ok = true;
                break;      
             }
+         }
+
+         if (!read_ok){
+            // sometimes going to cadMode after no packet was received results continous 12 mA power consumption
+            // radio stays in Rx mode?
+            // this delay seems to solve the problem 
+            delay(25);
          }
 
          LoRa.cadMode();

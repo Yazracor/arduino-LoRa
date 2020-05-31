@@ -35,12 +35,12 @@ void setup() {
   WDTCSR |= 1<<WDCE | 1<<WDE;
 
   // Table 10-3. Watchdog Timer Prescale Select
-  //WDTCSR = WDTO_8S; // 1<<WDP3 | 1<<WDP0;           // 8 seconds
-  //WDTCSR = WDTO_4S; // 1<<WDP3;                     // 4 seconds
-  //WDTCSR = WDTO_2S; // 1<<WDP2 | 1<<WDP1 | 1<<WDP0; // 2 seconds
-  //WDTCSR = WDTO_1S; // 1<<WDP2 | 1<<WDP1;           // 1 seconds
-  //WDTCSR = WDTO_30MS;
-  WDTCSR = WDTO_15MS;
+  //WDTCSR = 1<<WDP3 | 1<<WDP0;           // 8 seconds
+  //WDTCSR = 1<<WDP3;                     // 4 seconds
+  //WDTCSR = 1<<WDP2 | 1<<WDP1 | 1<<WDP0; // 2 seconds
+  //WDTCSR = 1<<WDP2 | 1<<WDP1;           // 1 seconds
+  //WDTCSR = 1<<WDP0;                     // 32 ms
+  WDTCSR = 0;                             // 16 ms
 
   WDTCSR |= 1<<WDIE;
 
@@ -121,24 +121,20 @@ void loop() {
       // dio1 is not used in this sketch: CadDetected is looked up in RegIrqFlags
       
       if (LoRa.irqCadDetected()){
-         // prepare radio to receive a single packet
-         // no need to change DIO mapping in this sketch, run parsePacket() instead
-         // manually change state (previously it was changed in setRxSingle())
+         LoRa.receive();
+
          // these attributes are not really needed in this sketch anymore
          LoRa.cadModeActive = false;
-         LoRa.rxSingleMode = true;
+         //LoRa.rxSingleMode = true;
 
-         // when not already in RxSingle, LoRa.parsePacket() first sets the radio in RxSingle
-         LoRa.parsePacket();
-
-         // wait a while for the packet to arrive
-         go_to_sleep();
-
-         uint32_t read_timeout = millis() + 200;
-         while (millis() < read_timeout){
-            if (parse_packet()){
+         // sleep a while until RxDone is triggered
+         for (uint8_t i = 0; i < 20; i++){
+            go_to_sleep();
+            if (dio0_rise){
+               dio0_rise = false;
+               parse_packet();
                Serial.flush();
-               break;      
+               break;
             }
          }
 

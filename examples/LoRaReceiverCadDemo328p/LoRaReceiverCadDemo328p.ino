@@ -35,12 +35,12 @@ void setup() {
   WDTCSR |= 1<<WDCE | 1<<WDE;
 
   // Table 10-3. Watchdog Timer Prescale Select
-  //WDTCSR = WDTO_8S; // 1<<WDP3 | 1<<WDP0;           // 8 seconds
-  //WDTCSR = WDTO_4S; // 1<<WDP3;                     // 4 seconds
-  //WDTCSR = WDTO_2S; // 1<<WDP2 | 1<<WDP1 | 1<<WDP0; // 2 seconds
-  //WDTCSR = WDTO_1S; // 1<<WDP2 | 1<<WDP1;           // 1 seconds
-  //WDTCSR = WDTO_30MS;
-  WDTCSR = WDTO_15MS;
+  //WDTCSR = 1<<WDP3 | 1<<WDP0;           // 8 seconds
+  //WDTCSR = 1<<WDP3;                     // 4 seconds
+  //WDTCSR = 1<<WDP2 | 1<<WDP1 | 1<<WDP0; // 2 seconds
+  //WDTCSR = 1<<WDP2 | 1<<WDP1;           // 1 seconds
+  //WDTCSR = 1<<WDP0;                     // 32 ms
+  WDTCSR = 0;                             // 16 ms
 
   WDTCSR |= 1<<WDIE;
 

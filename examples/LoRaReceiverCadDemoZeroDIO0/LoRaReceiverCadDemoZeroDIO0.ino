@@ -110,7 +110,7 @@ void setup_rtc(){
 
   // Enable Deep Sleep Mode--------------------------------------------------------------
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk; // | SCB_SCR_SLEEPONEXIT_Msk; // Put the SAMD21 in deep sleep upon executing the __WFI() function
-  NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_SLEEPPRM_DISABLED;           // Disable auto power reduction during sleep - SAMD21 Errata 1.14.2
+  //NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_SLEEPPRM_DISABLED;           // Disable auto power reduction during sleep - SAMD21 Errata 1.14.2
 
   // Enable RTC--------------------------------------------------------------
   RTC->MODE1.CTRL.bit.ENABLE = 1;                       // Enable the RTC

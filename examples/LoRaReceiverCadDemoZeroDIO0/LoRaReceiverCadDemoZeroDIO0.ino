@@ -98,7 +98,7 @@ void setup_rtc(){
                           RTC_MODE1_CTRL_MODE_COUNT16;          // Set RTC to mode 1, 16-bit timer                         
  
  
-  RTC->MODE1.PER.reg = RTC_MODE1_PER_PER(30);   // interrupt every 30 ms
+  RTC->MODE1.PER.reg = RTC_MODE1_PER_PER(32);   // 1024 hz: 1000 ms / 1024 * 32: 31.25 ms
   while (RTC->MODE1.STATUS.bit.SYNCBUSY);       // Wait for synchronization
 
   // Configure RTC interrupts ------------------------------------------

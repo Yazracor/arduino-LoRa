@@ -93,6 +93,11 @@ public:
   void setSPIFrequency(uint32_t frequency);
 
   void dumpRegisters(Stream& out);
+  void cadMode();
+  bool irqCadDetected();
+  void setRxSingle();
+  bool cadModeActive = false;
+  bool rxSingleMode = false;
 
 private:
   void explicitHeaderMode();

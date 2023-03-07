@@ -47,6 +47,7 @@
 #define MODE_TX                  0x03
 #define MODE_RX_CONTINUOUS       0x05
 #define MODE_RX_SINGLE           0x06
+#define MODE_CAD                 0x07
 
 // PA config
 #define PA_BOOST                 0x80
@@ -55,6 +56,7 @@
 #define IRQ_TX_DONE_MASK           0x08
 #define IRQ_PAYLOAD_CRC_ERROR_MASK 0x20
 #define IRQ_RX_DONE_MASK           0x40
+#define IRQ_CAD_DETECTED           0x01
 
 #define RF_MID_BAND_THRESHOLD    525E6
 #define RSSI_OFFSET_HF_PORT      157
@@ -368,9 +370,9 @@ void LoRaClass::onReceive(void(*callback)(int))
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
 #endif
-    attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
+    //attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
   } else {
-    detachInterrupt(digitalPinToInterrupt(_dio0));
+    //detachInterrupt(digitalPinToInterrupt(_dio0));
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.notUsingInterrupt(digitalPinToInterrupt(_dio0));
 #endif
@@ -386,9 +388,9 @@ void LoRaClass::onTxDone(void(*callback)())
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
 #endif
-    attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
+    //attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
   } else {
-    detachInterrupt(digitalPinToInterrupt(_dio0));
+    //detachInterrupt(digitalPinToInterrupt(_dio0));
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.notUsingInterrupt(digitalPinToInterrupt(_dio0));
 #endif
@@ -744,6 +746,48 @@ uint8_t LoRaClass::singleTransfer(uint8_t address, uint8_t value)
   digitalWrite(_ss, HIGH);
 
   return response;
+}
+
+void LoRaClass::cadMode(){
+  cadModeActive = true;
+  rxSingleMode  = false;
+
+  // SX1276 datasheet page 105:
+  // RegDioMapping1:
+  //   Mapping of pins DIO0 to DIO5
+  //   See Table 18 for mapping in LoRa mode
+  //
+  // Table 18 DIO Mapping LoRa® Mode (page 46):
+  // dio0: CadDone    : 10
+  // dio1: CadDetected: 10
+  writeRegister(REG_DIO_MAPPING_1, 0b10100000);
+
+  writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_CAD);
+}
+
+bool LoRaClass::irqCadDetected(){
+    if (readRegister(REG_IRQ_FLAGS) & IRQ_CAD_DETECTED){
+       writeRegister(REG_IRQ_FLAGS, IRQ_CAD_DETECTED);
+       return true;
+    }
+
+    return false;
+}
+
+void LoRaClass::setRxSingle(){
+    // prepare to receive a single packet
+    cadModeActive = false;
+    rxSingleMode  = true;
+
+    // dio mapping for RxSingle:
+    writeRegister(REG_DIO_MAPPING_1, 0x00); // DIO0 => RxDone, DIO1 => RxTimeout
+
+    // same code as in parsePacket():
+    // reset FIFO address
+    writeRegister(REG_FIFO_ADDR_PTR, 0);
+
+    // put in single RX mode
+    writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
 }
 
 ISR_PREFIX void LoRaClass::onDio0Rise()
